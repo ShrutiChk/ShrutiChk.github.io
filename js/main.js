@@ -1,79 +1,63 @@
-(function ($) {
+(function () {
     "use strict";
-    
-    // Smooth scrolling on the navbar links
-    $(".navbar-nav a").on('click', function (event) {
-        if (this.hash !== "") {
-            event.preventDefault();
-            
-            $('html, body').animate({
-                scrollTop: $(this.hash).offset().top - 30
-            }, 1500, 'easeInOutExpo');
-            
-            if ($(this).parents('.navbar-nav').length) {
-                $('.navbar-nav .active').removeClass('active');
-                $(this).closest('a').addClass('active');
-            }
-        }
-    });
-    
 
-    // Typed Initiate
-    if ($('.header h2').length == 1) {
-        var typed_strings = $('.header .typed-text').text();
-        var typed = new Typed('.header h2', {
-            strings: typed_strings.split(', '),
-            typeSpeed: 100,
-            backSpeed: 20,
-            smartBackspace: false,
-            loop: true
+    var navToggle = document.querySelector(".nav-toggle");
+    var siteNav = document.querySelector(".site-nav");
+    var navLinks = Array.prototype.slice.call(document.querySelectorAll(".site-nav a"));
+    var sections = navLinks
+        .map(function (link) {
+            var id = link.getAttribute("href");
+            return id && id.charAt(0) === "#" ? document.querySelector(id) : null;
+        })
+        .filter(Boolean);
+
+    function closeNav() {
+        if (!siteNav || !navToggle) {
+            return;
+        }
+
+        siteNav.classList.remove("open");
+        document.body.classList.remove("nav-open");
+        navToggle.setAttribute("aria-expanded", "false");
+        navToggle.innerHTML = '<i class="fa fa-bars" aria-hidden="true"></i>';
+    }
+
+    if (navToggle && siteNav) {
+        navToggle.addEventListener("click", function () {
+            var isOpen = siteNav.classList.toggle("open");
+            document.body.classList.toggle("nav-open", isOpen);
+            navToggle.setAttribute("aria-expanded", String(isOpen));
+            navToggle.innerHTML = isOpen
+                ? '<i class="fa fa-times" aria-hidden="true"></i>'
+                : '<i class="fa fa-bars" aria-hidden="true"></i>';
+        });
+
+        navLinks.forEach(function (link) {
+            link.addEventListener("click", closeNav);
         });
     }
-    
-    
-    // Skills
-    $('.skills').waypoint(function () {
-        $('.progress .progress-bar').each(function () {
-            $(this).css("width", $(this).attr("aria-valuenow") + '%');
+
+    function setActiveNav() {
+        var current = "";
+
+        sections.forEach(function (section) {
+            var top = section.getBoundingClientRect().top;
+            if (top <= 120) {
+                current = "#" + section.id;
+            }
         });
-    }, {offset: '80%'});
-    
-    
-    // Porfolio isotope and filter
-    var portfolioIsotope = $('.portfolio-container').isotope({
-        itemSelector: '.portfolio-item',
-        layoutMode: 'fitRows'
-    });
 
-    $('#portfolio-flters li').on('click', function () {
-        $("#portfolio-flters li").removeClass('filter-active');
-        $(this).addClass('filter-active');
+        navLinks.forEach(function (link) {
+            link.classList.toggle("active", link.getAttribute("href") === current);
+        });
+    }
 
-        portfolioIsotope.isotope({filter: $(this).data('filter')});
-    });
-    
-    
-    // Review slider
-    $('.review-slider').slick({
-        autoplay: true,
-        dots: false,
-        infinite: true,
-        slidesToShow: 1,
-        slidesToScroll: 1
-    });
-    
-    
-    // Back to top button
-    $(window).scroll(function () {
-        if ($(this).scrollTop() > 100) {
-            $('.back-to-top').fadeIn('slow');
-        } else {
-            $('.back-to-top').fadeOut('slow');
+    setActiveNav();
+    window.addEventListener("scroll", setActiveNav, { passive: true });
+    window.addEventListener("resize", function () {
+        if (window.innerWidth > 820) {
+            closeNav();
         }
+        setActiveNav();
     });
-    $('.back-to-top').click(function () {
-        $('html, body').animate({scrollTop: 0}, 1500, 'easeInOutExpo');
-        return false;
-    });
-})(jQuery);
-
+})();
